@@ -1,4 +1,4 @@
-# Snake
+# Snake (1 persoana)
 Clasicul joc Snake, cu mici modificări.
 Specificații:
 - 2 moduri de joc: single player și versus un alt snake (cât mai deștept) care încearcă
