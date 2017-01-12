@@ -1,6 +1,0 @@
-# depslib dependency file v1.0
-1484249442 source:c:\users\marius cretu\codeblocks projects\snakee\main.cpp
-	<iostream>
-	<conio.h>
-	<windows.h>
-
