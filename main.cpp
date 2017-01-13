@@ -1,71 +1,97 @@
-#include <iostream>
 #include <conio.h>
 #include <windows.h>
-using namespace std;
-bool gameOver;
-const int width = 20;
+#include <SFML/Graphics.hpp>
+using namespace sf;
+bool gOver = true;
+bool snake = true;
+const int width = 30;
 const int height = 20;
-int x, y, fruitX, fruitY, score;
+const int lenght=30; //definire dimensiuni harta
+
+int x, y, fruitX, fruitY, speedX, speedY, score;
+
 int tailX[100], tailY[100];
 int nTail;
+
 enum eDirecton { STOP = 0, LEFT, RIGHT, UP, DOWN};
 eDirecton dir;
+
+//prestabilire valori incepere joc
 void Setup()
 {
-	gameOver = false;
+	gOver = false;
 	dir = STOP;
-	x = width / 2;
-	y = height / 2;
-	fruitX = rand() % width;
-	fruitY = rand() % height;
+	x = (lenght * width) / 2;
+	y = (lenght * height) / 2;
+	fruitX = rand() % ( lenght * width );
+	fruitY = rand() % ( lenght * height );
 	score = 0;
 }
+//imput tastatura
 void Draw()
 {
-	system("cls"); //system("clear");
-	for (int i = 0; i < width+2; i++)
-		cout << "#";
-	cout << endl;
+    RenderWindow window(VideoMode(width*lenght, height*lenght), "SNake - Marius Cretu!");
+    Texture t1,t;
+    t1.loadFromFile("images/fundal2.jpg");
+    t.loadFromFile("images/sarpe.png");
 
-	for (int i = 0; i < height; i++)
-	{
-		for (int j = 0; j < width; j++)
-		{
-			if (j == 0)
-				cout << "#";
-			if (i == y && j == x)
-				cout << "O";
-			else if (i == fruitY && j == fruitX)
-				cout << "F";
-			else
-			{
-				bool print = false;
-				for (int k = 0; k < nTail; k++)
-				{
-					if (tailX[k] == j && tailY[k] == i)
-					{
-						cout << "o";
-						print = true;
-					}
-				}
-				if (!print)
-					cout << " ";
-			}
+    Sprite sprite1(t1);
+    Sprite sprite(t);
 
-
-			if (j == width - 1)
-				cout << "#";
-		}
-		cout << endl;
-	}
-
-	for (int i = 0; i < width+2; i++)
-		cout << "#";
-	cout << endl;
-	cout << "Score:" << score << endl;
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+        window.clear();
+        window.draw(sprite1);
+        for (int i = 0; i < lenght * height; i++)
+        {
+            for (int j = 0; j < lenght * width; j++)
+            {
+                if (i == y && j == x){
+                    sprite.setPosition(i , j);
+                    window.draw(sprite);
+                }
+                else
+                {
+                    bool print = false;
+                    for (int k = 0; k < nTail; k++)
+                    {
+                        if (tailX[k] == j && tailY[k] == i)
+                        {
+                            sprite.setPosition(i , j);
+                            window.draw(sprite);
+                            print = true;
+                        }
+                    }
+                }
+            }
+        }
+    window.display();
+    }
 }
-void Input()
+void Logic()
 {
+	int prevX = tailX[0];
+	int prevY = tailY[0];
+	int prev2X, prev2Y;
+	tailX[0] = x;
+	tailY[0] = y;
+	for (int i = 1; i < nTail; i++)
+	{
+		prev2X = tailX[i];
+		prev2Y = tailY[i];
+		tailX[i] = prevX;
+		tailY[i] = prevY;
+		prevX = prev2X;
+		prevY = prev2Y;
+	} //implementare coada snake
+
+
 	if (_kbhit())
 	{
 		switch (_getch())
@@ -83,26 +109,9 @@ void Input()
 			dir = DOWN;
 			break;
 		case 'x':
-			gameOver = true;
+			gOver = true;
 			break;
 		}
-	}
-}
-void Logic()
-{
-	int prevX = tailX[0];
-	int prevY = tailY[0];
-	int prev2X, prev2Y;
-	tailX[0] = x;
-	tailY[0] = y;
-	for (int i = 1; i < nTail; i++)
-	{
-		prev2X = tailX[i];
-		prev2Y = tailY[i];
-		tailX[i] = prevX;
-		tailY[i] = prevY;
-		prevX = prev2X;
-		prevY = prev2Y;
 	}
 	switch (dir)
 	{
@@ -121,30 +130,40 @@ void Logic()
 	default:
 		break;
 	}
+
 	if (x >= width) x = 0; else if (x < 0) x = width - 1;
-	if (y >= height) y = 0; else if (y < 0) y = height - 1;
+	if (y >= height) y = 0; else if (y < 0) y = height - 1; //teleportare pe partea opusa
 
+    //suicide
 	for (int i = 0; i < nTail; i++)
-		if (tailX[i] == x && tailY[i] == y)
-			gameOver = true;
+		if (tailX[i] == x && tailY[i] == y) // daca coada se intalneste cu capul sarpelui
+			{gOver = true;}
 
+    //trecere peste fruct
 	if (x == fruitX && y == fruitY)
 	{
-		score += 10;
+		score += 10; //incrementare scor;
 		fruitX = rand() % width;
-		fruitY = rand() % height;
-		nTail++;
+		fruitY = rand() % height; //spamare fruct
+		nTail++; //crestere lungime coada
 	}
+
 }
+
+void Play()
+{
+    Setup();
+    while(snake)
+    {
+        Draw();
+        Logic();
+    }
+}
+
+
+
 int main()
 {
-	Setup();
-	while (!gameOver)
-	{
-		Draw();
-		Input();
-		Logic();
-		Sleep(10);
-	}
-	return 0;
+    Play();
+    return 0;
 }
