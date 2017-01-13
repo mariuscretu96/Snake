@@ -1,169 +1,221 @@
-#include <conio.h>
-#include <windows.h>
 #include <SFML/Graphics.hpp>
+#include "Menu.h"
+#include <iostream>
+
 using namespace sf;
-bool gOver = true;
-bool snake = true;
-const int width = 30;
-const int height = 20;
-const int lenght=30; //definire dimensiuni harta
+int score=0;
+int rows=30,columns=25;
+int length=25;
+int width = length*rows;
+int height = length*columns;
+int ok=0;
+int dir=0,num=3;
+bool gameover=false;
+bool imput=false;
+bool valid=false;
+bool SpawnBoost=false;
+bool ChangeSkin=false;
+bool TrapOn=false,high=false,pausegame=false;
 
-int x, y, fruitX, fruitY, speedX, speedY, score;
+float delay=0.1;
 
-int tailX[100], tailY[100];
-int nTail;
-
-enum eDirecton { STOP = 0, LEFT, RIGHT, UP, DOWN};
-eDirecton dir;
-
-//prestabilire valori incepere joc
-void Setup()
+struct Snake
 {
-	gOver = false;
-	dir = STOP;
-	x = (lenght * width) / 2;
-	y = (lenght * height) / 2;
-	fruitX = rand() % ( lenght * width );
-	fruitY = rand() % ( lenght * height );
-	score = 0;
-}
-//imput tastatura
-void Draw()
+    int x,y;
+}  snake[1400];
+
+struct Fruct
 {
-    RenderWindow window(VideoMode(width*lenght, height*lenght), "SNake - Marius Cretu!");
-    Texture t1,t;
-    t1.loadFromFile("images/fundal2.jpg");
-    t.loadFromFile("images/sarpe.png");
+    int x,y;
+} fruit;
 
-    Sprite sprite1(t1);
-    Sprite sprite(t);
 
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
-        window.clear();
-        window.draw(sprite1);
-        for (int i = 0; i < lenght * height; i++)
-        {
-            for (int j = 0; j < lenght * width; j++)
-            {
-                if (i == y && j == x){
-                    sprite.setPosition(i , j);
-                    window.draw(sprite);
-                }
-                else
-                {
-                    bool print = false;
-                    for (int k = 0; k < nTail; k++)
-                    {
-                        if (tailX[k] == j && tailY[k] == i)
-                        {
-                            sprite.setPosition(i , j);
-                            window.draw(sprite);
-                            print = true;
-                        }
-                    }
-                }
-            }
-        }
-    window.display();
-    }
-}
 void Logic()
 {
-	int prevX = tailX[0];
-	int prevY = tailY[0];
-	int prev2X, prev2Y;
-	tailX[0] = x;
-	tailY[0] = y;
-	for (int i = 1; i < nTail; i++)
-	{
-		prev2X = tailX[i];
-		prev2Y = tailY[i];
-		tailX[i] = prevX;
-		tailY[i] = prevY;
-		prevX = prev2X;
-		prevY = prev2Y;
-	} //implementare coada snake
-
-
-	if (_kbhit())
-	{
-		switch (_getch())
-		{
-		case 'a':
-			dir = LEFT;
-			break;
-		case 'd':
-			dir = RIGHT;
-			break;
-		case 'w':
-			dir = UP;
-			break;
-		case 's':
-			dir = DOWN;
-			break;
-		case 'x':
-			gOver = true;
-			break;
-		}
-	}
-	switch (dir)
-	{
-	case LEFT:
-		x--;
-		break;
-	case RIGHT:
-		x++;
-		break;
-	case UP:
-		y--;
-		break;
-	case DOWN:
-		y++;
-		break;
-	default:
-		break;
-	}
-
-	if (x >= width) x = 0; else if (x < 0) x = width - 1;
-	if (y >= height) y = 0; else if (y < 0) y = height - 1; //teleportare pe partea opusa
-
-    //suicide
-	for (int i = 0; i < nTail; i++)
-		if (tailX[i] == x && tailY[i] == y) // daca coada se intalneste cu capul sarpelui
-			{gOver = true;}
-
-    //trecere peste fruct
-	if (x == fruitX && y == fruitY)
-	{
-		score += 10; //incrementare scor;
-		fruitX = rand() % width;
-		fruitY = rand() % height; //spamare fruct
-		nTail++; //crestere lungime coada
-	}
-
-}
-
-void Play()
-{
-    Setup();
-    while(snake)
+    for (int i=num; i>0; --i)
     {
-        Draw();
-        Logic();
+        snake[i].x=snake[i-1].x;
+        snake[i].y=snake[i-1].y;
     }
+
+    if (dir==0) snake[0].y+=1;
+    if (dir==1) snake[0].x-=1;
+    if (dir==2) snake[0].x+=1;
+    if (dir==3) snake[0].y-=1;
+
+    if ((snake[0].x==fruit.x) && (snake[0].y==fruit.y))
+    {
+        num++;
+        do
+        {
+            valid=true;
+            fruit.x=rand() % rows;
+            fruit.y=rand() % columns;
+
+            for(int i=1; i<num; i++)
+                if((snake[i].x==fruit.x)&&(snake[i].y)==(fruit.y))
+                    valid=false;
+        }
+        while(valid==false);
+
+
+        score++;
+    }
+    if (snake[0].x>=rows) gameover=true;
+    if (snake[0].x<0) gameover=true;
+    if (snake[0].y>columns-1) gameover=true;
+    if (snake[0].y<0) gameover=true;
+
+    for (int i=1;i<num;i++)
+     if (snake[0].x==snake[i].x && snake[0].y==snake[i].y) gameover=true;
+imput=false;
+ }
+
+ void Play()
+{
+    srand(time(0));
+    RenderWindow window(VideoMode(width, height), "Snake Game!");
+
+	Texture t1,t2,t3;
+	t1.loadFromFile("images/fundal2.jpg");
+	t2.loadFromFile("images/sarpe.png");
+	t3.loadFromFile("images/fruct.jpg");
+
+	Sprite sprite1(t1);
+	Sprite sprite2(t2);
+	Sprite sprite3(t3);
+
+        Clock clock;
+
+    float timer=0;
+
+
+	fruit.x=10;
+    fruit.y=10;
+
+    Event e;
+    while (window.isOpen())
+    {
+        if (gameover==true)
+            {
+                window.close();
+            }
+        float time = clock.getElapsedTime().asSeconds();
+        clock.restart();
+        timer+=time;
+
+
+        while (window.pollEvent(e))
+        {
+            if (gameover==true)
+                window.close();
+            if (e.type == Event::Closed)
+                window.close();
+            if (gameover==true)
+                window.close();
+		}
+
+		if ((Keyboard::isKeyPressed(Keyboard::Left) and dir!=2)and imput==false) {dir=1;imput=true;}
+	    if ((Keyboard::isKeyPressed(Keyboard::Right) and dir!=1)and imput==false)  {dir=2;imput=true;}
+	    if ((Keyboard::isKeyPressed(Keyboard::Up) and dir!=0)and imput==false) {dir=3;imput=true;}
+		if ((Keyboard::isKeyPressed(Keyboard::Down) and dir!=3)and imput==false) {dir=0;imput=true;}
+		if (Keyboard::isKeyPressed(Keyboard::Escape)) gameover=true;
+		if (Keyboard::isKeyPressed(Keyboard::P))  pausegame=true;
+		if (Keyboard::isKeyPressed(Keyboard::Return)) pausegame=false;
+		if ((timer>delay)&&(!pausegame)) {timer=0; Logic();}
+
+   ////// draw  ///////
+    window.clear();
+    window.draw(sprite1);
+
+
+    //set snake
+
+        for (int i=0; i<num; i++)
+            {sprite2.setPosition(snake[i].x*length, snake[i].y*length);
+            window.draw(sprite2);
+        }
+         //set food
+
+        if(ok==0)
+        {
+            sprite3.setPosition(fruit.x*length, fruit.y*length);
+            window.draw(sprite3);
+
+        }
+
+        window.display();
+    }
+
+    //return 0;
 }
+void Meniu()
+{
 
+    start:
+    sf::RenderWindow window(sf::VideoMode(340, 250), "Snake | Menu");
+	Texture t;
+    t.loadFromFile("images/menu.jpg");
 
+    Sprite sprite1(t);
 
+	Menu menu(170, 125);
+
+	while (window.isOpen())
+	{
+		sf::Event event;
+
+		while (window.pollEvent(event))
+		{
+			switch (event.type)
+			{
+			case sf::Event::KeyReleased:
+				switch (event.key.code)
+				{
+				case sf::Keyboard::Up:
+					menu.MoveUp();
+					break;
+
+				case sf::Keyboard::Down:
+					menu.MoveDown();
+					break;
+
+				case sf::Keyboard::Return:
+					switch (menu.GetPressedItem())
+					{
+					case 0:
+					    window.close();
+                        Play();
+                        goto start;
+						break;
+					case 1:
+						//eroare
+						break;
+					case 2:
+						window.close();
+						break;
+					}
+
+					break;
+				}
+
+				break;
+			case sf::Event::Closed:
+				window.close();
+
+				break;
+
+			}
+		}
+
+		window.clear();
+        window.draw(sprite1);
+		menu.draw(window);
+
+		window.display();
+	}
+}
 int main()
 {
-    Play();
-    return 0;
+	Meniu();
 }

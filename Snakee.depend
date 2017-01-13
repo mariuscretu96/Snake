@@ -1,6 +1,0 @@
-# depslib dependency file v1.0
-1484263393 source:c:\users\marius cretu\documents\github\snake\main.cpp
-	<iostream>
-	<conio.h>
-	<windows.h>
-
