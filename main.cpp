@@ -13,9 +13,7 @@ int dir=0,num=3;
 bool gameover=false;
 bool imput=false;
 bool valid=false;
-bool SpawnBoost=false;
-bool ChangeSkin=false;
-bool TrapOn=false,high=false,pausegame=false;
+bool pausegame = false;
 
 float delay=0.1;
 
@@ -79,7 +77,7 @@ imput=false;
 	Texture t1,t2,t3;
 	t1.loadFromFile("images/fundal2.jpg");
 	t2.loadFromFile("images/sarpe.png");
-	t3.loadFromFile("images/fruct.jpg");
+	t3.loadFromFile("images/bal.png");
 
 	Sprite sprite1(t1);
 	Sprite sprite2(t2);
